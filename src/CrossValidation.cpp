@@ -331,7 +331,8 @@ void train_one_svm(void* arg){
   pWeights->vec = targs->model;
   pWeights->d = targs->n;
 
-  L2_SVM_MFN(*targs->svmInput, targs->pOptions, pWeights, targs->Outputs, targs->cpos, targs->cfrac * targs->cpos);
+  // L2_SVM_MFN(*targs->svmInput, targs->pOptions, pWeights, targs->Outputs, targs->cpos, targs->cfrac * targs->cpos);
+  tron(*targs->svmInput, targs->pOptions, pWeights, targs->Outputs, targs->cpos, targs->cfrac * targs->cpos);
 
   vector<double> trainedmodel;
   for(int j=0; j<targs->n ;j++){
@@ -556,7 +557,8 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
     }
     svmInput->setCost(bestCpos, bestCpos * bestCfrac);
     
-    L2_SVM_MFN(*svmInput, pOptions, pWeights, Outputs, bestCpos, bestCpos * bestCfrac);
+    // L2_SVM_MFN(*svmInput, pOptions, pWeights, Outputs, bestCpos, bestCpos * bestCfrac);
+    tron(*svmInput, pOptions, pWeights, Outputs, bestCpos, bestCpos * bestCfrac);
 
     for (int i = FeatureNames::getNumFeatures() + 1; i--;) {
       bestW[i] = pWeights->vec[i];

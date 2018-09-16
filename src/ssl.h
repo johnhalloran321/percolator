@@ -141,4 +141,28 @@ double line_search_nrOne(double* w, double* w_bar, double lambda, double* o,
 			 double* o_bar, const double* Y, int d, int l, 
 			  double cpos, double cneg);
 
+////////////////// single threaded tron headers
+int tron(const AlgIn& data, struct options* Options,
+	 struct vector_double* Weights,
+	 struct vector_double* Outputs, 
+	 double cpos, double cneg);
+int trcg(double delta, double *g, double *s, double *r, bool *reach_boundary, 
+	 int n, const double* Y, double* X, const int* Id, int sizeI, 
+	 const int cgitermax, double cpos, double cneg, const double eps_cg);
+
+double fun(double *w, int w_size, int l,
+	   const double* y, double* z, double* X, 
+	   double cpos, double cneg);
+
+int grad(double *w, double *g, int w_size, int l,
+	 const double* y, double* z, double* X,
+	 int* Id, double cpos, double cneg);
+
+void subXTv(double *v, double *XTv, int w_size,
+	    double* X, const int* Id, int sizeI);
+
+void Hv(double *s, double *Hs, int w_size,
+        const double* y, double* X, const int *Id, int sizeI, 
+	double cpos, double cneg);
+
 #endif
