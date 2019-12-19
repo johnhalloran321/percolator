@@ -214,13 +214,13 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
 
   ofstream featFile;
   featFile.open(str.c_str());
-  for(int i = 0; i < n; i++){
+  for(int i = 0; i < n-1; i++){
     featFile << "feature" << i << "\t";
   }
   featFile << "label\n";
 
   for(int i = 0; i < m; i++){
-    for(int j = 0; j < n; j++){
+    for(int j = 0; j < n-1; j++){
       featFile << set[i][j] << "\t";
     }
     featFile << Y[i] << "\n";
@@ -323,7 +323,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
 	str.append(buffer);
 	str.append(".txt");
 	predictFile.open(str.c_str());
-	predictFile << "xTw\ty\n";
+	predictFile << "xTw\tlabel\n";
 	for(int i = 0; i < m; i++){
 	  predictFile << o[i] << "\t" << Y[i] << "\n";
 	}
@@ -364,7 +364,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
 	str.append(buffer);
 	str.append(".txt");
 	predictFile.open(str.c_str());
-	predictFile << "xTw\ty\n";
+	predictFile << "xTw\tlabel\n";
 	for(int i = 0; i < m; i++){
 	  predictFile << o[i] << "\t" << Y[i] << "\n";
 	}
@@ -389,7 +389,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
   str.append(buffer);
   str.append(".txt");
   predictFile.open(str.c_str());
-  predictFile << "xTw\ty\n";
+  predictFile << "xTw\tlabel\n";
   for(int i = 0; i < m; i++){
     predictFile << o[i] << "\t" << Y[i] << "\n";
   }

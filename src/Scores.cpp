@@ -192,7 +192,7 @@ void Scores::printRetentionTime(ostream& outs, double fdr) {
 
 double Scores::calcScore(const double* feat, const std::vector<double>& w) const {
   register int ix = FeatureNames::getNumFeatures();
-  register double score = w[ix];
+  register double score = w[ix]; // bias
 
   for (; ix--;) {
     score += feat[ix] * w[ix];
@@ -481,9 +481,9 @@ int Scores::calcScores(std::vector<double>& w, double fdr, bool skipDecoysPlusOn
     for(int i = 0; i < n; i++){
       featFile << "feature" << i << "\t";
     }
-    featFile << "label\txTw\n";
+    featFile << "label\n";
     // Predictions
-    predictFile << "xTw\ty\n";
+    predictFile << "xTw\tlabel\n";
 
     for ( ; scoreIt != scores_.end(); ++scoreIt) {
       scoreIt->score = calcScore(scoreIt->pPSM->features, w);
@@ -491,7 +491,7 @@ int Scores::calcScores(std::vector<double>& w, double fdr, bool skipDecoysPlusOn
       for(int j = 0; j < n; j++){
 	featFile << scoreIt->pPSM->features[j] << "\t";
       }
-      featFile << scoreIt->label << "\t" << scoreIt->score << "\n";
+      featFile << scoreIt->label << "\n";
       // Write predictions
       predictFile << scoreIt->score << "\t" << scoreIt->label << "\n";
     }
