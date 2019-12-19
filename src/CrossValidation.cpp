@@ -30,12 +30,13 @@ const double CrossValidation::requiredIncreaseOver2Iterations_ = 0.01;
 CrossValidation::CrossValidation(bool quickValidation, 
   bool reportPerformanceEachIteration, double testFdr, double selectionFdr, 
   double initialSelectionFdr, double selectedCpos, double selectedCneg, int niter, bool usePi0,
-  int nestedXvalBins, bool trainBestPositive) :
+  int nestedXvalBins, bool trainBestPositive, bool skipNormalizeScores) :
     quickValidation_(quickValidation), usePi0_(usePi0),
     reportPerformanceEachIteration_(reportPerformanceEachIteration), 
     testFdr_(testFdr), selectionFdr_(selectionFdr), initialSelectionFdr_(initialSelectionFdr),
     selectedCpos_(selectedCpos), selectedCneg_(selectedCneg), niter_(niter),
-    nestedXvalBins_(nestedXvalBins), trainBestPositive_(trainBestPositive) {}
+    nestedXvalBins_(nestedXvalBins), trainBestPositive_(trainBestPositive),
+    skipNormalizeScores_(skipNormalizeScores) {}
 
 
 CrossValidation::~CrossValidation() { 
@@ -109,7 +110,7 @@ int CrossValidation::preIterationSetup(Scores& fullset, SanityCheck* pCheck,
     for (int set = 0; set < numFolds_; ++set) {
       trainScores_[set].calcScores(w_[set], selectionFdr_);
     }
-  #pragma omp parallel for schedule(dynamic, 1)
+  // #pragma omp parallel for schedule(dynamic, 1)
     for (int set = 0; set < numFolds_; ++set) {
       trainScores_[set].recalculateDescriptionOfCorrect(selectionFdr_);
       testScores_[set].getDOC().copyDOCparameters(trainScores_[set].getDOC());
@@ -233,7 +234,7 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
   }
   
   if (DataSet::getCalcDoc() && updateDOC) {
-  #pragma omp parallel for schedule(dynamic, 1)
+  // #pragma omp parallel for schedule(dynamic, 1)
     for (int set = 0; set < numFolds_; ++set) {
       trainScores_[set].recalculateDescriptionOfCorrect(selectionFdr);
       //trainScores_[set].setDOCFeatures(pNorm); // this overwrites features of overlapping training folds...
@@ -243,7 +244,7 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
   }
   
   if (!quickValidation_) {
-  #pragma omp parallel for schedule(dynamic, 1) ordered
+  // #pragma omp parallel for schedule(dynamic, 1) ordered
     for (int set = 0; set < numFolds_; ++set) {
       struct vector_double* pWeights = new vector_double;
       pWeights->d = FeatureNames::getNumFeatures() + 1;
@@ -254,10 +255,10 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
       int estTruePosFold = processSingleFold(set, selectionFdr, candidatesCpos_, 
                                       candidatesCfrac_, bestCpos, bestCfrac, 
                                       pWeights, pOptions);
-      #pragma omp critical (add_tps)
-      {
+      // #pragma omp critical (add_tps)
+      // {
         estTruePos += estTruePosFold;
-      }
+      // }
       
       delete[] pWeights->vec;
       delete pWeights;
@@ -275,14 +276,19 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
                                     candidatesCfrac_, bestCpos, bestCfrac, 
                                     pWeights, pOptions);
     vector<double> cp(1, bestCpos), cf(1, bestCfrac);
-  #pragma omp parallel for schedule(dynamic, 1) ordered
+  // #pragma omp parallel for schedule(dynamic, 1) ordered
     for (int set = 1; set < numFolds_; ++set) {
+      struct vector_double* pWeightsTmp = new vector_double;
+      pWeightsTmp->d = pWeights->d;
+      pWeightsTmp->vec = new double[pWeights->d];
       int estTruePosFold = processSingleFold(set, selectionFdr, cp, cf, bestCpos, 
-                                      bestCfrac, pWeights, pOptions);
-      #pragma omp critical (add_tps)
-      {
+                                      bestCfrac, pWeightsTmp, pOptions);
+      // #pragma omp critical (add_tps)
+      // {
         estTruePos += estTruePosFold;
-      }  
+      // }
+      delete[] pWeightsTmp->vec;
+      delete pWeightsTmp;
     }
     delete[] pWeights->vec;
     delete pWeights;
@@ -321,10 +327,10 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
   std::vector<Scores> nestedTrainScores(nestedXvalBins_, usePi0_), nestedTestScores(nestedXvalBins_, usePi0_);
   if (nestedXvalBins_ > 1) {
     FeatureMemoryPool featurePool;
-  #pragma omp ordered
-    {
+  // #pragma omp ordered
+      // {
       trainScores_[set].createXvalSetsBySpectrum(nestedTrainScores, nestedTestScores, nestedXvalBins_, featurePool);
-    }
+    // }
   } else {
     // sub-optimal cross validation
     nestedTrainScores[0] = trainScores_[set];
@@ -332,6 +338,7 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
   }
   
   AlgIn* svmInput = svmInputs_[set % numAlgInObjects_];
+  int ccIter = 0;
   std::map<std::pair<double, double>, int> intermediateResults;
   for (unsigned int nestedFold = 0; nestedFold < nestedXvalBins_; ++nestedFold) {
     nestedTrainScores[nestedFold].generateNegativeTrainingSet(*svmInput, 1.0);
@@ -368,13 +375,14 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
         svmInput->setCost(cpos, cpos * cfrac);
         
         // Call SVM algorithm (see ssl.cpp)
-        L2_SVM_MFN(*svmInput, pOptions, pWeights, Outputs);
+        L2_SVM_MFN(*svmInput, pOptions, pWeights, Outputs, ccIter);
         
         for (int i = FeatureNames::getNumFeatures() + 1; i--;) {
           ww[i] = pWeights->vec[i];
         }
         
-        tp = nestedTestScores[nestedFold].calcScores(ww, testFdr_, skipDecoysPlusOne);
+        tp = nestedTestScores[nestedFold].calcScores(ww, testFdr_, skipDecoysPlusOne, ccIter);
+	ccIter++;
         if (VERB > 3) {
           cerr << "- cross-validation found " << tp
                << " training set PSMs with q_liberal<" << testFdr_ << "." << endl;
@@ -436,7 +444,7 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
     svmInput->setCost(bestCpos, bestCpos * bestCfrac);
     
     // Call SVM algorithm (see ssl.cpp)
-    L2_SVM_MFN(*svmInput, pOptions, pWeights, Outputs);
+    L2_SVM_MFN(*svmInput, pOptions, pWeights, Outputs, ccIter);
     
     for (int i = FeatureNames::getNumFeatures() + 1; i--;) {
       bestW[i] = pWeights->vec[i];
@@ -445,15 +453,16 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
     delete Outputs;
   }
   
-  bestTruePos = trainScores_[set].calcScores(bestW, testFdr_);
-  
+  bestTruePos = trainScores_[set].calcScores(bestW, testFdr_, false, ccIter);
+  ccIter++;
+
   if (VERB > 2) {
     std::cerr << "Split " << set + 1 << ": Found " << 
         bestTruePos << " training set PSMs with q<" << testFdr_ <<
         " for hyperparameters Cpos=" << bestCpos << 
         ", Cneg=" << bestCfrac * bestCpos << "." << std::endl;
   }
-  
+  exit(0);
   w_[set] = bestW;
   return bestTruePos;
 }
@@ -469,7 +478,7 @@ void CrossValidation::postIterationProcessing(Scores& fullset,
     // TODO: take the average instead of the first DOC model?
     fullset.getDOC().copyDOCparameters(testScores_[0].getDOC());
   }
-  fullset.merge(testScores_, selectionFdr_);
+  fullset.merge(testScores_, selectionFdr_, skipNormalizeScores_);
 }
 
 /**

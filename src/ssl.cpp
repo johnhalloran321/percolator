@@ -5,6 +5,7 @@
  *
  *******************************************************************************/
 #include <iostream>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -165,7 +166,7 @@ int CGLS(const AlgIn& data, const double lambda, const int cgitermax,
 
 int L2_SVM_MFN(const AlgIn& data, struct options* Options,
                struct vector_double* Weights,
-               struct vector_double* Outputs) {
+               struct vector_double* Outputs, int ccIter) {
   /* Disassemble the structures */
   timer tictoc;
   tictoc.restart();
@@ -204,6 +205,29 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
       inactive--;
     }
   }
+  
+  std::string str = "features";
+  char buffer [2];
+  sprintf(buffer,"%d",ccIter);
+  str.append(buffer);
+  str.append(".txt");
+
+  ofstream featFile;
+  featFile.open(str.c_str());
+  for(int i = 0; i < n; i++){
+    featFile << "feature" << i << "\t";
+  }
+  featFile << "label\n";
+
+  for(int i = 0; i < m; i++){
+    for(int j = 0; j < n; j++){
+      featFile << set[i][j] << "\t";
+    }
+    featFile << Y[i] << "\n";
+  }
+  featFile.close();
+
+
   ActiveSubset->d = active;
   int iter = 0;
   int opt = 0;
@@ -292,6 +316,20 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
               << " iteration(s) and " << tictoc.time() << " seconds. \n"
               << endl;
         }
+
+	// Write out predictions
+	ofstream predictFile;
+	str = "predictions";
+	str.append(buffer);
+	str.append(".txt");
+	predictFile.open(str.c_str());
+	predictFile << "xTw\ty\n";
+	for(int i = 0; i < m; i++){
+	  predictFile << o[i] << "\t" << Y[i] << "\n";
+	}
+	predictFile.close();
+	// exit(0);
+
         return 1;
       }
     }
@@ -320,6 +358,19 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
     ActiveSubset->d = active;
     if (fabs(F - F_old) < RELATIVE_STOP_EPS * fabs(F_old)) {
       //    cout << "L2_SVM_MFN converged (rel. criterion) in " << iter << " iterations and "<< tictoc.time() << " seconds. \n" << endl;
+	// Write out predictions
+	ofstream predictFile;
+	str = "predictions";
+	str.append(buffer);
+	str.append(".txt");
+	predictFile.open(str.c_str());
+	predictFile << "xTw\ty\n";
+	for(int i = 0; i < m; i++){
+	  predictFile << o[i] << "\t" << Y[i] << "\n";
+	}
+	predictFile.close();
+	// exit(0);
+
       return 2;
     }
   }
@@ -331,6 +382,21 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
   delete[] Outputs_bar;
   tictoc.stop();
   //  cout << "L2_SVM_MFN converged (max iter exceeded) in " << iter << " iterations and "<< tictoc.time() << " seconds. \n" << endl;
+
+  // Write out predictions
+  ofstream predictFile;
+  str = "predictions";
+  str.append(buffer);
+  str.append(".txt");
+  predictFile.open(str.c_str());
+  predictFile << "xTw\ty\n";
+  for(int i = 0; i < m; i++){
+    predictFile << o[i] << "\t" << Y[i] << "\n";
+  }
+  predictFile.close();
+  // exit(0);
+
+
   return 0;
 }
 

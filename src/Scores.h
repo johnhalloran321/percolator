@@ -172,7 +172,7 @@ class Scores {
     targetDecoySizeRatio_(1.0), totalNumberOfDecoys_(0),
     totalNumberOfTargets_(0), decoyPtr_(NULL), targetPtr_(NULL) {}
   ~Scores() {}
-  void merge(vector<Scores>& sv, double fdr);
+  void merge(vector<Scores>& sv, double fdr, bool skipNormalizeScores);
   void postMergeStep();
   
   std::vector<ScoreHolder>::iterator begin() { return scores_.begin(); }
@@ -181,7 +181,7 @@ class Scores {
   double calcScore(const double* features, const std::vector<double>& w) const;
   void scoreAndAddPSM(ScoreHolder& sh, const std::vector<double>& rawWeights,
                       FeatureMemoryPool& featurePool);
-  int calcScores(vector<double>& w, double fdr, bool skipDecoysPlusOne = false);
+  int calcScores(vector<double>& w, double fdr, bool skipDecoysPlusOne = false, int ccIter = -1);
   int calcQ(double fdr, bool skipDecoysPlusOne = false);
   void recalculateDescriptionOfCorrect(const double fdr);
   void calcPep();

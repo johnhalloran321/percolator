@@ -154,13 +154,15 @@ void ScoreHolder::printPeptide(ostream& os, bool printDecoys, bool printExpMass,
   }
 }
 
-void Scores::merge(std::vector<Scores>& sv, double fdr) {
+void Scores::merge(std::vector<Scores>& sv, double fdr, bool skipNormalizeScores) {
   scores_.clear();
   for (std::vector<Scores>::iterator a = sv.begin(); a != sv.end(); a++) {
     sort(a->begin(), a->end(), greater<ScoreHolder> ());
     a->checkSeparationAndSetPi0();
     a->calcQ(fdr);
-    a->normalizeScores(fdr);
+    if (!skipNormalizeScores) {
+      a->normalizeScores(fdr);
+    }
     copy(a->begin(), a->end(), back_inserter(scores_));
   }
   postMergeStep();
@@ -191,6 +193,7 @@ void Scores::printRetentionTime(ostream& outs, double fdr) {
 double Scores::calcScore(const double* feat, const std::vector<double>& w) const {
   register int ix = FeatureNames::getNumFeatures();
   register double score = w[ix];
+
   for (; ix--;) {
     score += feat[ix] * w[ix];
   }
@@ -449,12 +452,58 @@ void Scores::normalizeScores(double fdr) {
  * @param fdr FDR threshold specified by user (default 0.01)
  * @return number of true positives
  */
-int Scores::calcScores(std::vector<double>& w, double fdr, bool skipDecoysPlusOne) {
+int Scores::calcScores(std::vector<double>& w, double fdr, bool skipDecoysPlusOne, int ccIter) {
   unsigned int ix;
   std::vector<ScoreHolder>::iterator scoreIt = scores_.begin();
-  for ( ; scoreIt != scores_.end(); ++scoreIt) {
-    scoreIt->score = calcScore(scoreIt->pPSM->features, w);
+
+  if(ccIter > -1){
+    int n = FeatureNames::getNumFeatures();
+    char buffer [2];
+    sprintf(buffer,"%d",ccIter);
+
+    // Feature matrix
+    std::string str = "testFeatures";
+    str.append(buffer);
+    str.append(".txt");
+
+    ofstream featFile;
+    featFile.open(str.c_str());
+
+    // Predictions
+    ofstream predictFile;
+    str = "testPredictions";
+    str.append(buffer);
+    str.append(".txt");
+    predictFile.open(str.c_str());
+
+    // Write headers
+    // Features
+    for(int i = 0; i < n; i++){
+      featFile << "feature" << i << "\t";
+    }
+    featFile << "label\txTw\n";
+    // Predictions
+    predictFile << "xTw\ty\n";
+
+    for ( ; scoreIt != scores_.end(); ++scoreIt) {
+      scoreIt->score = calcScore(scoreIt->pPSM->features, w);
+
+      for(int j = 0; j < n; j++){
+	featFile << scoreIt->pPSM->features[j] << "\t";
+      }
+      featFile << scoreIt->label << "\t" << scoreIt->score << "\n";
+      // Write predictions
+      predictFile << scoreIt->score << "\t" << scoreIt->label << "\n";
+    }
+    featFile.close();
+    predictFile.close();
+
+  } else {
+    for ( ; scoreIt != scores_.end(); ++scoreIt) {
+      scoreIt->score = calcScore(scoreIt->pPSM->features, w);
+    }
   }
+
   sort(scores_.begin(), scores_.end(), greater<ScoreHolder> ());
   if (VERB > 3) {
     if (scores_.size() >= 10) {

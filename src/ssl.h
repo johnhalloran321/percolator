@@ -133,7 +133,7 @@ int CGLS(const AlgIn& set, const double lambda, const int cgitermax,
 /* Solves: min_w 0.5*Options->lamda*w'*w + 0.5*sum_i Data->C[i] max(0,1 - Y[i] w' x_i)^2 */
 int L2_SVM_MFN(const AlgIn& set, struct options* Options,
                struct vector_double* Weights,
-               struct vector_double* Outputs);
+               struct vector_double* Outputs, int ccIter);
 double line_search(double* w, double* w_bar, double lambda, double* o,
                    double* o_bar, const double* Y, const double* C, int d,
                    int l);
