@@ -323,7 +323,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
 	str.append(buffer);
 	str.append(".txt");
 	predictFile.open(str.c_str());
-	predictFile << "xTw\tlabel\n";
+	predictFile << "score\tlabel\n";
 	for(int i = 0; i < m; i++){
 	  predictFile << o[i] << "\t" << Y[i] << "\n";
 	}
@@ -364,7 +364,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
 	str.append(buffer);
 	str.append(".txt");
 	predictFile.open(str.c_str());
-	predictFile << "xTw\tlabel\n";
+	predictFile << "score\tlabel\n";
 	for(int i = 0; i < m; i++){
 	  predictFile << o[i] << "\t" << Y[i] << "\n";
 	}
@@ -389,7 +389,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
   str.append(buffer);
   str.append(".txt");
   predictFile.open(str.c_str());
-  predictFile << "xTw\tlabel\n";
+  predictFile << "score\tlabel\n";
   for(int i = 0; i < m; i++){
     predictFile << o[i] << "\t" << Y[i] << "\n";
   }
