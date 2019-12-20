@@ -483,7 +483,7 @@ int Scores::calcScores(std::vector<double>& w, double fdr, bool skipDecoysPlusOn
     }
     featFile << "label\n";
     // Predictions
-    predictFile << "scores\tlabel\n";
+    predictFile << "score\tlabel\n";
 
     for ( ; scoreIt != scores_.end(); ++scoreIt) {
       scoreIt->score = calcScore(scoreIt->pPSM->features, w);
