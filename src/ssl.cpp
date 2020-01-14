@@ -205,29 +205,30 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
       inactive--;
     }
   }
-  
+
   std::string str = "features";
   char buffer [2];
   sprintf(buffer,"%d",ccIter);
   str.append(buffer);
   str.append(".txt");
 
-  ofstream featFile;
-  featFile.open(str.c_str());
-  for(int i = 0; i < n-1; i++){
-    // featFile << "feature" << i << "\t";
-    featFile << DataSet::getFeatureNames().getFeatureName(i) << "\t";
-  }
-  featFile << "label\n";
-
-  for(int i = 0; i < m; i++){
-    for(int j = 0; j < n-1; j++){
-      featFile << set[i][j] << "\t";
+  if(ccIter > -1){
+    ofstream featFile;
+    featFile.open(str.c_str());
+    for(int i = 0; i < n-1; i++){
+      // featFile << "feature" << i << "\t";
+      featFile << DataSet::getFeatureNames().getFeatureName(i) << "\t";
     }
-    featFile << Y[i] << "\n";
-  }
-  featFile.close();
+    featFile << "label\n";
 
+    for(int i = 0; i < m; i++){
+      for(int j = 0; j < n-1; j++){
+	featFile << set[i][j] << "\t";
+      }
+      featFile << Y[i] << "\n";
+    }
+    featFile.close();
+  }
 
   ActiveSubset->d = active;
   int iter = 0;
@@ -318,18 +319,20 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
               << endl;
         }
 
-	// Write out predictions
-	ofstream predictFile;
-	str = "predictions";
-	str.append(buffer);
-	str.append(".txt");
-	predictFile.open(str.c_str());
-	predictFile << "score\tlabel\n";
-	for(int i = 0; i < m; i++){
-	  predictFile << o[i] << "\t" << Y[i] << "\n";
+	if(ccIter > -1){
+	  // Write out predictions
+	  ofstream predictFile;
+	  str = "predictions";
+	  str.append(buffer);
+	  str.append(".txt");
+	  predictFile.open(str.c_str());
+	  predictFile << "score\tlabel\n";
+	  for(int i = 0; i < m; i++){
+	    predictFile << o[i] << "\t" << Y[i] << "\n";
+	  }
+	  predictFile.close();
+	  // exit(0);
 	}
-	predictFile.close();
-	// exit(0);
 
         return 1;
       }
@@ -359,6 +362,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
     ActiveSubset->d = active;
     if (fabs(F - F_old) < RELATIVE_STOP_EPS * fabs(F_old)) {
       //    cout << "L2_SVM_MFN converged (rel. criterion) in " << iter << " iterations and "<< tictoc.time() << " seconds. \n" << endl;
+      if(ccIter > -1){
 	// Write out predictions
 	ofstream predictFile;
 	str = "predictions";
@@ -371,7 +375,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
 	}
 	predictFile.close();
 	// exit(0);
-
+      }
       return 2;
     }
   }
@@ -384,19 +388,20 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
   tictoc.stop();
   //  cout << "L2_SVM_MFN converged (max iter exceeded) in " << iter << " iterations and "<< tictoc.time() << " seconds. \n" << endl;
 
-  // Write out predictions
-  ofstream predictFile;
-  str = "predictions";
-  str.append(buffer);
-  str.append(".txt");
-  predictFile.open(str.c_str());
-  predictFile << "score\tlabel\n";
-  for(int i = 0; i < m; i++){
-    predictFile << o[i] << "\t" << Y[i] << "\n";
+  if(ccIter > -1){
+    // Write out predictions
+    ofstream predictFile;
+    str = "predictions";
+    str.append(buffer);
+    str.append(".txt");
+    predictFile.open(str.c_str());
+    predictFile << "score\tlabel\n";
+    for(int i = 0; i < m; i++){
+      predictFile << o[i] << "\t" << Y[i] << "\n";
+    }
+    predictFile.close();
+    // exit(0);
   }
-  predictFile.close();
-  // exit(0);
-
 
   return 0;
 }

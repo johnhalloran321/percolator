@@ -160,8 +160,9 @@ void CrossValidation::train(Normalizer* pNorm) {
     
     if (reportPerformanceEachIteration_) {
       int foundTestPositives = 0;
+      int ccIter = 10;
       for (size_t set = 0; set < numFolds_; ++set) {
-        foundTestPositives += testScores_[set].calcScores(w_[set], testFdr_);
+        foundTestPositives += testScores_[set].calcScores(w_[set], testFdr_, false, ccIter++);
       }
       if (VERB > 1) {
         cerr << "Found " << foundTestPositives << " test set PSMs with q<" 
@@ -198,8 +199,9 @@ void CrossValidation::train(Normalizer* pNorm) {
     printAllRawWeightsColumns(cerr, pNorm);
   }
   foundPositives = 0;
+  int ccIter = 10;
   for (size_t set = 0; set < numFolds_; ++set) {
-    foundPositives += testScores_[set].calcScores(w_[set], testFdr_);
+    foundPositives += testScores_[set].calcScores(w_[set], testFdr_, false, ccIter++);
   }
   if (VERB > 0) {
     std::cerr << "Found " << foundPositives << 
@@ -338,12 +340,13 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
   }
   
   AlgIn* svmInput = svmInputs_[set % numAlgInObjects_];
-  int ccIter = 0;
+  int ccIter = 9*set;
   std::map<std::pair<double, double>, int> intermediateResults;
   for (unsigned int nestedFold = 0; nestedFold < nestedXvalBins_; ++nestedFold) {
     nestedTrainScores[nestedFold].generateNegativeTrainingSet(*svmInput, 1.0);
     nestedTrainScores[nestedFold].generatePositiveTrainingSet(*svmInput, selectionFdr, 1.0, trainBestPositive_);
-    
+    cerr << "ccIter " << ccIter << ", nestedFold = " << nestedFold << "\n";
+
     if (VERB > 2) {
       cerr << "Split " << set + 1 << ": Training with " 
         << svmInput->positives << " positives and "
@@ -382,7 +385,7 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
         }
         
         tp = nestedTestScores[nestedFold].calcScores(ww, testFdr_, skipDecoysPlusOne, ccIter);
-	ccIter++;
+	ccIter = -1;
         if (VERB > 3) {
           cerr << "- cross-validation found " << tp
                << " training set PSMs with q_liberal<" << testFdr_ << "." << endl;
@@ -452,9 +455,10 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
     delete[] Outputs->vec;
     delete Outputs;
   }
-  
+
+  ccIter = 9*set;
   bestTruePos = trainScores_[set].calcScores(bestW, testFdr_, false, ccIter);
-  ccIter++;
+  ccIter = -1;
 
   if (VERB > 2) {
     std::cerr << "Split " << set + 1 << ": Found " << 
