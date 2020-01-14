@@ -462,7 +462,6 @@ int CrossValidation::processSingleFold(unsigned int set, double selectionFdr,
         " for hyperparameters Cpos=" << bestCpos << 
         ", Cneg=" << bestCfrac * bestCpos << "." << std::endl;
   }
-  exit(0);
   w_[set] = bestW;
   return bestTruePos;
 }

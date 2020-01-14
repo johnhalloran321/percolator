@@ -215,7 +215,8 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
   ofstream featFile;
   featFile.open(str.c_str());
   for(int i = 0; i < n-1; i++){
-    featFile << "feature" << i << "\t";
+    // featFile << "feature" << i << "\t";
+    featFile << DataSet::getFeatureNames().getFeatureName(i) << "\t";
   }
   featFile << "label\n";
 

@@ -479,7 +479,8 @@ int Scores::calcScores(std::vector<double>& w, double fdr, bool skipDecoysPlusOn
     // Write headers
     // Features
     for(int i = 0; i < n; i++){
-      featFile << "feature" << i << "\t";
+      featFile << DataSet::getFeatureNames().getFeatureName(i) << "\t";
+      // featFile << "feature" << i << "\t";
     }
     featFile << "label\n";
     // Predictions

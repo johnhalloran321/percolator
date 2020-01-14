@@ -9,6 +9,9 @@
 #include <vector>
 #include <ctime>
 
+#include "FeatureNames.h"
+#include "DataSet.h"
+
 using namespace std;
 
 /* OPTIMIZATION CONSTANTS */
