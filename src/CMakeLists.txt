@@ -73,6 +73,7 @@ endif(XML_SUPPORT)
 #############################################################################
 # COMPILE PERCOLATOR
 ###############################################################################
+find_package(Torch REQUIRED)
 
 if(XML_SUPPORT)
   add_library(perclibrary STATIC ${xsdfiles_in} ${xsdfiles_out} parser.cxx serializer.cxx BaseSpline.cpp DescriptionOfCorrect.cpp MassHandler.cpp 
@@ -135,16 +136,25 @@ ELSE(CRUX)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -Wno-unused-result -Wno-overflow -Wall -g -pg -fprofile-arcs -ftest-coverage")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -DNDEBUG -Wno-unused-result -Wno-overflow -Wall -g -pg -fprofile-arcs -ftest-coverage")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g -DNDEBUG -Wno-unused-result -Wno-overflow -Wall -g -pg -fprofile-arcs -ftest-coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TORCH_C_FLAGS}")
   endif()
    
   # SET LIBRARIES FOR PERCOLATOR
   if(MSVC)
-    target_link_libraries(percolator perclibrary fido picked_protein ${XERCESC_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CURL_LIBRARIES})
+    target_link_libraries(percolator perclibrary fido picked_protein ${XERCESC_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CURL_LIBRARIES} ${TORCH_LIBRARIES})
+    file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+    add_custom_command(TARGET percolator
+                     	      POST_BUILD
+                     	      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     	      ${TORCH_DLLS}
+                     	      $<TARGET_FILE_DIR percolator>)
+
   else(MSVC)
     if (APPLE)
-      target_link_libraries(percolator perclibrary fido picked_protein ${XERCESC_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CURL_LIBRARIES} )
+      target_link_libraries(percolator perclibrary fido picked_protein ${XERCESC_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CURL_LIBRARIES} ${TORCH_LIBRARIES})
     else(APPLE)
-      target_link_libraries(percolator perclibrary fido picked_protein ${XERCESC_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CURL_LIBRARIES} stdc++)
+      target_link_libraries(percolator perclibrary fido picked_protein ${XERCESC_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CURL_LIBRARIES} stdc++ ${TORCH_LIBRARIES})
     endif (APPLE)
   endif()
    

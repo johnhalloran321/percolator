@@ -14,7 +14,7 @@
  limitations under the License.
 
  *******************************************************************************/
-
+#include <torch/torch.h>
 #include "CrossValidation.h"
 
 // number of folds for cross validation

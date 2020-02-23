@@ -1,7 +1,7 @@
 #############################################################################
 # NAME AND VERSION
 ###############################################################################
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 project(PERCOLATOR)
 set(PERCOLATOR_SOURCE_DIR ${CMAKE_SOURCE_DIR})
 include("CommonCMake.txt")
@@ -16,6 +16,8 @@ option(XML_SUPPORT "Choose to support xml input (slower compilation)." OFF)
 if(XML_SUPPORT)
   add_definitions(-DXML_SUPPORT)
 endif(XML_SUPPORT)
+
+list(APPEND CMAKE_PREFIX_PATH "/home/jthalloran/torch/libtorch")
 
 # PRINT VARIBALES TO STDOUT
 MESSAGE( STATUS )
