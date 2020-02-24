@@ -17,7 +17,20 @@ if(XML_SUPPORT)
   add_definitions(-DXML_SUPPORT)
 endif(XML_SUPPORT)
 
-list(APPEND CMAKE_PREFIX_PATH "/home/jthalloran/torch/libtorch")
+set(ZIPFN ${CMAKE_CURRENT_BINARY_DIR}/libtorch-shared-with-deps-latest.zip)
+set(OUTFN ${CMAKE_CURRENT_BINARY_DIR}/libtorch)
+
+if(NOT EXISTS ${OUTFN})
+  if(NOT EXISTS ${ZIPFN})
+  MESSAGE( STATUS "Downloading torch" )
+    file(DOWNLOAD https://download.pytorch.org/libtorch/cu90/libtorch-shared-with-deps-latest.zip ${ZIPFN}
+         SHOW_PROGRESS)
+  endif()
+  
+  execute_process(COMMAND ${CMAKE_COMMAND} -E tar -xf ${ZIPFN}
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${TORCH_C_FLAGS}")
