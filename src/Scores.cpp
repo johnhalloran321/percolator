@@ -14,7 +14,7 @@
  limitations under the License.
 
  *******************************************************************************/
-
+#include <torch/torch.h>
 #include <cassert>
 #include <iostream>
 #include <iomanip>
