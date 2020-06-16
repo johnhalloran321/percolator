@@ -37,6 +37,7 @@ class AlgIn {
     double** vals;
     double* Y; /* labels */
     double* C; /* cost associated with each example */
+    bool* supportVectors;
     void setCost(double pos, double neg) {
       int ix = 0;
       for (; ix < negatives; ++ix) {

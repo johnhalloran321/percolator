@@ -46,6 +46,7 @@ AlgIn::AlgIn(const int size, const int numFeat) {
   vals = new double*[size];
   Y = new double[size];
   C = new double[size];
+  supportVectors = new bool[size];
   n = numFeat;
   positives = 0;
   negatives = 0;
@@ -54,6 +55,7 @@ AlgIn::~AlgIn() {
   delete[] vals;
   delete[] Y;
   delete[] C;
+  delete[] supportVectors;
 }
 
 double cglsFun1(int active, int* J, const double* Y,
@@ -202,6 +204,7 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
   timer tictoc;
   tictoc.restart();
   double** set = data.vals;
+  bool* suppVecs = data.supportVectors;
   const double* Y = data.Y;
   int n = Weights->d;
   const int m = data.m;
@@ -298,6 +301,10 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
       } else {
         memcpy(w, w_bar, sizeof(double)*n);
         memcpy(o, o_bar, sizeof(double)*m);
+	// Note support vectorts
+	for (int i = 0; i < m; i++) {
+	  suppVecs[i] = (Y[i] * o[i] < 1);
+	}
         delete[] ActiveSubset->vec;
         delete[] ActiveSubset;
         delete[] o_bar;
@@ -335,6 +342,10 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
     }
     ActiveSubset->d = active;
     if (fabs(F - F_old) < RELATIVE_STOP_EPS * fabs(F_old)) {
+      // Note support vectorts
+      for (int i = 0; i < m; i++) {
+	suppVecs[i] = (Y[i] * o[i] < 1);
+      }
       // Memory leak fix below
       delete[] ActiveSubset->vec;
       delete[] ActiveSubset;
@@ -346,6 +357,10 @@ int L2_SVM_MFN(const AlgIn& data, struct options* Options,
       //    cout << "L2_SVM_MFN converged (rel. criterion) in " << iter << " iterations and "<< tictoc.time() << " seconds. \n" << endl;
       return 2;
     }
+  }
+  // Note support vectorts
+  for (int i = 0; i < m; i++) {
+    suppVecs[i] = (Y[i] * o[i] < 1);
   }
   delete[] ActiveSubset->vec;
   delete[] ActiveSubset;
