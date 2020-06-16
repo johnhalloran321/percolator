@@ -36,6 +36,7 @@ struct candidateCposCfrac {
   unsigned int set;
   int nestedSet;
   vector<double> ww;
+  vector<bool> supportVectors;
   int tp;
 };
 

@@ -367,6 +367,13 @@ void CrossValidation::trainCpCnPair(candidateCposCfrac& cpCnFold,
   for (int i = FeatureNames::getNumFeatures() + 1; i--;) {
     cpCnFold.ww[i] = pWeights->vec[i];
   }
+  // Update container for supportVector informatio
+  cpCnFold.supportVectors.resize(numInputs);
+  // Record support vectors
+  for (int ix = 0; ix < numInputs; ix++) {
+    cpCnFold.supportVectors[ix] = svmInput->supportVectors[ix];
+  }
+
   delete[] Outputs->vec;
   delete Outputs;
   delete[] pWeights->vec;
