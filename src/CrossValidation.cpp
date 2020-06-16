@@ -187,7 +187,7 @@ void CrossValidation::train(Normalizer* pNorm) {
     if (i == 0u) {
       selectionFdr = initialSelectionFdr_;
     }
-    foundPositives = doStep(updateDOC, pNorm, selectionFdr);
+    foundPositives = doStep(updateDOC, pNorm, selectionFdr, i);
     
     if (reportPerformanceEachIteration_) {
       int foundTestPositives = 0;
@@ -238,7 +238,6 @@ void CrossValidation::train(Normalizer* pNorm) {
   }  
 }
 
-
 /** 
  * Executes a cross validation step
  * @param w_ list of the bins' normal vectors (in linear algebra sense) of the 
@@ -247,7 +246,7 @@ void CrossValidation::train(Normalizer* pNorm) {
  *        @see DescriptionOfCorrect
  * @return Estimation of number of true positives
  */
-int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionFdr) {
+int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionFdr, int trainingIter) {
   // Setup
   struct options* pOptions = new options;
   pOptions->lambda = 1.0;
@@ -322,7 +321,7 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
   }
 
   estTruePos = mergeCpCnPairs(selectionFdr, pOptions, nestedTestScoresVec, candidatesCpos_, 
-                              candidatesCfrac_);
+                              candidatesCfrac_, trainingIter);
   delete pOptions;
   return estTruePos;
 }
@@ -380,6 +379,44 @@ void CrossValidation::trainCpCnPair(candidateCposCfrac& cpCnFold,
   delete pWeights;
 }
 
+/*
+*/
+void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int trainingIter){
+      // supportVectors[set] = classWeightsPerFold_[bestInd].supportVectors;
+      // supportVectors = &(classWeightsPerFold_[bestInd].supportVectors);
+      std::string str = "supportVectors";
+      char buffer [30];
+      sprintf(buffer,"_fold%d_iteration%d", fold, trainingIter);
+      str.append(buffer);
+      str.append(".txt");
+
+      double** set = data.vals;
+      const double* Y = data.Y;
+      const int n = data.n;
+      const int m = data.m;
+
+      ofstream featFile;
+      featFile.open(str.c_str());
+      for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
+	// featFile << "feature" << i << "\t";
+	featFile << DataSet::getFeatureNames().getFeatureName(i) << "\t";
+      }
+      featFile << "label\n";
+
+      // for(int i = 0; i < m; i++){
+      // 	// if(!supportVectors[set][i]){
+      // 	if(!supportVectors->at(i)){
+      // 	  continue;
+      // 	}
+      // 	for(int j = 0; j < n-1; j++){
+      // 	  featFile << set[i][j] << "\t";
+      // 	}
+      // 	featFile << Y[i] << "\n";
+      // }
+      featFile.close();
+
+}
+
 /** 
  * Validate and merge weights learned per cpos,cneg pairs per nested CV fold per CV fold
  * @param pWeights results vector from the SVM algorithm
@@ -388,7 +425,7 @@ void CrossValidation::trainCpCnPair(candidateCposCfrac& cpCnFold,
 */
 int CrossValidation::mergeCpCnPairs(double selectionFdr,
                                     options * pOptions, vector< vector<Scores> >& nestedTestScoresVec,
-                                    const vector<double>& cposCandidates, const vector<double>& cfracCandidates) {
+                                    const vector<double>& cposCandidates, const vector<double>& cfracCandidates, int trainingIter) {
   // for determining the number of positives, the decoys+1 in the FDR estimates 
   // is too restrictive for small datasets
   bool skipDecoysPlusOne = true;
@@ -439,6 +476,13 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
         }
       }
     }
+
+    // Write out support vectors for optimal (cpos,cneg) SVMs per set
+    if (nestedXvalBins_ <= 1) {
+      AlgIn* svmInput = svmInputs_[set];
+      writeSupportVectors(*svmInput, set, trainingIter);
+    }
+
   }
   
   if (nestedXvalBins_ > 1) {
