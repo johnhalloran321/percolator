@@ -112,7 +112,7 @@ class CrossValidation {
   void trainCpCnPair(candidateCposCfrac& cpCnFold,
                      options * pOptions, AlgIn* svmInput);
 
-  void writeSupportVectors(const AlgIn& data, int set, int trainingIter);
+  void writeSupportVectors(const AlgIn& data, int set, int trainingIter, vector<bool> &supportVectors);
   int mergeCpCnPairs(double selectionFdr,
                      options * pOptions, std::vector< std::vector<Scores> >& nestedTestScoresVec,
                      const vector<double>& cpos_vec, const vector<double>& cfrac_vec, 

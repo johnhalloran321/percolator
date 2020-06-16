@@ -381,7 +381,7 @@ void CrossValidation::trainCpCnPair(candidateCposCfrac& cpCnFold,
 
 /*
 */
-void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int trainingIter){
+void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors){
       // supportVectors[set] = classWeightsPerFold_[bestInd].supportVectors;
       // supportVectors = &(classWeightsPerFold_[bestInd].supportVectors);
       std::string str = "supportVectors";
@@ -403,16 +403,15 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       }
       featFile << "label\n";
 
-      // for(int i = 0; i < m; i++){
-      // 	// if(!supportVectors[set][i]){
-      // 	if(!supportVectors->at(i)){
-      // 	  continue;
-      // 	}
-      // 	for(int j = 0; j < n-1; j++){
-      // 	  featFile << set[i][j] << "\t";
-      // 	}
-      // 	featFile << Y[i] << "\n";
-      // }
+      for(int i = 0; i < m; i++){
+      	if(!supportVectors[i]){
+      	  continue;
+      	}
+      	for(int j = 0; j < n-1; j++){
+      	  featFile << set[i][j] << "\t";
+      	}
+      	featFile << Y[i] << "\n";
+      }
       featFile.close();
 
 }
@@ -429,7 +428,7 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
   // for determining the number of positives, the decoys+1 in the FDR estimates 
   // is too restrictive for small datasets
   bool skipDecoysPlusOne = true;
-  
+
   vector<int> bestTruePoses(numFolds_, 0);
   vector<double> bestCposes(numFolds_, 1);
   vector<double> bestCfracs(numFolds_, 1);
@@ -443,10 +442,13 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
   for (set = 0; set < numFolds_; ++set) {
     unsigned int a = set * numCpCnPairsPerSet;
     unsigned int b = (set+1) * numCpCnPairsPerSet;
+    int counter = -1;
+    int bestInd = 0;
     int tp = 0;
     std::vector<candidateCposCfrac>::iterator itCpCnPair;
     std::map<std::pair<double, double>, int> intermediateResults;
     for (itCpCnPair = classWeightsPerFold_.begin() + a; itCpCnPair < classWeightsPerFold_.begin() + b; itCpCnPair++) {
+      counter++;
       tp = nestedTestScoresVec[set][itCpCnPair->nestedSet].calcScores(itCpCnPair->ww, testFdr_, skipDecoysPlusOne);
       intermediateResults[std::make_pair(itCpCnPair->cpos, itCpCnPair->cfrac)] += tp;
       itCpCnPair->tp = tp;
@@ -472,6 +474,7 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
             bestTruePoses[set] = tp;
             bestCposes[set] = cpos;
             bestCfracs[set] = cfrac;
+	    bestInd = counter;
           }
         }
       }
@@ -480,7 +483,8 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
     // Write out support vectors for optimal (cpos,cneg) SVMs per set
     if (nestedXvalBins_ <= 1) {
       AlgIn* svmInput = svmInputs_[set];
-      writeSupportVectors(*svmInput, set, trainingIter);
+      vector<bool> *svs = &classWeightsPerFold_[bestInd].supportVectors;
+      writeSupportVectors(*svmInput, set, trainingIter, *svs);
     }
 
   }
