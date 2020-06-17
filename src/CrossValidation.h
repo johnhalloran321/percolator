@@ -46,8 +46,8 @@ class CrossValidation {
   CrossValidation(bool quickValidation, bool reportPerformanceEachIteration, 
     double testFdr, double selectionFdr, double initialSelectionFdr, 
     double selectedCpos, double selectedCneg, int niter, bool usePi0,
-          int nestedXvalBins, bool trainBestPositive, unsigned int numThreads,
-    bool skipNormalizeScores);
+    int nestedXvalBins, bool trainBestPositive, unsigned int numThreads,
+    bool skipNormalizeScores, std::string psmInfluencerDIR);
   
   ~CrossValidation();
   
@@ -101,6 +101,8 @@ class CrossValidation {
   
   bool trainBestPositive_;
   bool skipNormalizeScores_;
+
+  std::string psmInfluencerDIR_;
   
   const static double requiredIncreaseOver2Iterations_;
   

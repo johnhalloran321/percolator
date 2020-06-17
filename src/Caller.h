@@ -87,7 +87,7 @@ class Caller {
   std::string tabOutputFN_, xmlOutputFN_;
   std::string weightOutputFN_;
   std::string psmResultFN_, peptideResultFN_, proteinResultFN_;
-  std::string decoyPsmResultFN_, decoyPeptideResultFN_, decoyProteinResultFN_;
+  std::string decoyPsmResultFN_, decoyPeptideResultFN_, decoyProteinResultFN_, psmInfluencerDIR_;
   bool xmlPrintDecoys_, xmlPrintExpMass_;
   
   // report level parameters
@@ -115,6 +115,7 @@ class Caller {
       time_t& procStart, clock_t& procStartClock, double& diff);
   void calculateProteinProbabilities(Scores& allScores);
   void checkIsWritable(const std::string& filePath);
+  void createDirectory(const std::string& filePath);
   
 #ifdef CRUX
   virtual void processPsmScores(Scores& allScores) {}

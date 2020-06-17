@@ -15,7 +15,6 @@
 
  *******************************************************************************/
 // #include <boost/filesystem.hpp>
-#include <sys/stat.h>
 #include "CrossValidation.h"
 
 // number of folds for cross validation
@@ -33,13 +32,13 @@ const double CrossValidation::requiredIncreaseOver2Iterations_ = 0.01;
 CrossValidation::CrossValidation(bool quickValidation, 
   bool reportPerformanceEachIteration, double testFdr, double selectionFdr, 
   double initialSelectionFdr, double selectedCpos, double selectedCneg, int niter, bool usePi0,
-  int nestedXvalBins, bool trainBestPositive, unsigned int numThreads, bool skipNormalizeScores) :
+  int nestedXvalBins, bool trainBestPositive, unsigned int numThreads, bool skipNormalizeScores, std::string psmInfluencerDIR) :
     quickValidation_(quickValidation), usePi0_(usePi0),
     reportPerformanceEachIteration_(reportPerformanceEachIteration), 
     testFdr_(testFdr), selectionFdr_(selectionFdr), initialSelectionFdr_(initialSelectionFdr),
     selectedCpos_(selectedCpos), selectedCneg_(selectedCneg), niter_(niter),
     nestedXvalBins_(nestedXvalBins), trainBestPositive_(trainBestPositive),
-    numThreads_(numThreads), skipNormalizeScores_(skipNormalizeScores) {}
+  numThreads_(numThreads), skipNormalizeScores_(skipNormalizeScores), psmInfluencerDIR_(psmInfluencerDIR){}
 
 CrossValidation::~CrossValidation() { 
   for (unsigned int set = 0; set < numFolds_ * nestedXvalBins_; ++set) {
@@ -176,17 +175,7 @@ void CrossValidation::train(Normalizer* pNorm) {
     cerr << ", fdr=" << selectionFdr_ << endl;
   }
 
-  // Create directory for support vector info
-  struct stat info;
-  if (stat("supportVectors", &info) == 0 && S_ISDIR(info.st_mode)) {
-    std::cout << "Directory supportVectors exists, writing psm influencer info there." << endl;
-  } else {
-    if(mkdir("supportVectors", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)){
-      std::cerr << "Could not create directory for support vector information, exitting" << endl;
-      exit(-1);
-    }
-    std::cout << "Created directory supportVectors exists." << endl;
-  }
+  cout << "Oh hi, support vector output directory is " << psmInfluencerDIR_ << endl;
   
   // iterate
   int foundPositivesOldOld = 0, foundPositivesOld = 0, foundPositives = 0; 
@@ -395,7 +384,11 @@ void CrossValidation::trainCpCnPair(candidateCposCfrac& cpCnFold,
 /*
 */
 void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors){
-      std::string str = "supportVectors";
+#ifndef WIN32
+      std::string str = psmInfluencerDIR_ + "/supportVectors";
+#else
+      std::string str = psmInfluencerDIR_ + "\supportVectors";
+#endif
       char buffer [30];
       sprintf(buffer,"_fold%d_iteration%d", fold, trainingIter);
       str.append(buffer);

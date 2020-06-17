@@ -44,7 +44,7 @@ Caller::Caller() :
     numIterations_(10), maxPSMs_(0u),
     nestedXvalBins_(1u), selectedCpos_(0.0), selectedCneg_(0.0),
     reportEachIteration_(false), quickValidation_(false), 
-    trainBestPositive_(false), numThreads_(3u) {
+  trainBestPositive_(false), numThreads_(3u), psmInfluencerDIR_("supportVectors") {
 }
 
 Caller::~Caller() {
@@ -349,6 +349,10 @@ bool Caller::parseOptions(int argc, char **argv) {
 
   /* EXPERIMENTAL FLAGS: no long term support, flag names might be subject to change and behavior */
   cmd.defineOption(Option::EXPERIMENTAL_FEATURE,
+      "psm-influencer-output",
+      "Directory to write PSM influencer information.",
+      "directory");
+  cmd.defineOption(Option::EXPERIMENTAL_FEATURE,
       "num-threads",
       "Number of total parallel threads for SVM training during cross validation. Default (one thread per CV fold) = 3.",
       "value");
@@ -465,6 +469,12 @@ bool Caller::parseOptions(int argc, char **argv) {
       checkIsWritable(decoyPeptideResultFN_);
     }
   }
+
+  // psm influencer output directory
+  if (cmd.optionSet("psm-influencer-output")) {
+    psmInfluencerDIR_ = cmd.options["psm-influencer-output"];
+  }
+  createDirectory(psmInfluencerDIR_);
 
   if (cmd.optionSet("protein-enzyme")) {
     enzyme_ = Enzyme::createEnzyme(cmd.options["protein-enzyme"]);
@@ -885,6 +895,20 @@ void Caller::calculateProteinProbabilities(Scores& allScores) {
   protEstimator_->printOut(proteinResultFN_, decoyProteinResultFN_);
 }
 
+void Caller::createDirectory(const std::string& filePath) {
+  struct stat info;
+  if (stat(filePath.c_str(), &info) == 0 && S_ISDIR(info.st_mode)) {
+    std::cout << "Directory " << filePath << " exists, writing psm influencer info there." << endl;
+  } else {
+    if(mkdir(filePath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)){
+      ostringstream temp;
+      temp << "Could not create directory " << filePath << " for support vector information, exitting" << std::endl;
+      throw MyException(temp.str());
+    }
+    std::cout << "Created directory " << filePath << " for support vector information." << endl;
+  }
+}
+
 void Caller::checkIsWritable(const std::string& filePath) {
   std::ofstream ofs(filePath.c_str());
   if (!ofs.is_open()) {
@@ -1134,7 +1158,7 @@ int Caller::run() {
   CrossValidation crossValidation(quickValidation_, reportEachIteration_,
                                   testFdr_, selectionFdr_, initialSelectionFdr_, selectedCpos_,
                                   selectedCneg_, numIterations_, useMixMax_,
-                                  nestedXvalBins_, trainBestPositive_, numThreads_, skipNormalizeScores_);
+                                  nestedXvalBins_, trainBestPositive_, numThreads_, skipNormalizeScores_, psmInfluencerDIR_);
 
   int firstNumberOfPositives = crossValidation.preIterationSetup(allScores, pCheck_, pNorm_, setHandler.getFeaturePool());
   if (VERB > 0) {
