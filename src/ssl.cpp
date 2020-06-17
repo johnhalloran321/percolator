@@ -47,6 +47,7 @@ AlgIn::AlgIn(const int size, const int numFeat) {
   Y = new double[size];
   C = new double[size];
   supportVectors = new bool[size];
+  pPSMs = new PSMDescription*[size];
   n = numFeat;
   positives = 0;
   negatives = 0;
@@ -56,6 +57,7 @@ AlgIn::~AlgIn() {
   delete[] Y;
   delete[] C;
   delete[] supportVectors;
+  delete[] pPSMs;
 }
 
 double cglsFun1(int active, int* J, const double* Y,

@@ -510,6 +510,7 @@ void Scores::generateNegativeTrainingSet(AlgIn& data, const double cneg) {
     if (scoreIt->isDecoy()) {
       data.vals[ix2] = scoreIt->pPSM->features;
       data.Y[ix2] = -1;
+      data.pPSMs[ix2] = scoreIt->pPSM;
       data.C[ix2++] = cneg;
     }
   }
@@ -533,6 +534,7 @@ void Scores::generatePositiveTrainingSet(AlgIn& data, const double fdr,
       if (scoreIt->q <= fdr) {
         data.vals[ix2] = scoreIt->pPSM->features;
         data.Y[ix2] = 1;
+	data.pPSMs[ix2] = scoreIt->pPSM;
         data.C[ix2++] = cpos;
         ++p;
       }

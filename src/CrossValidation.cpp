@@ -382,13 +382,14 @@ void CrossValidation::trainCpCnPair(candidateCposCfrac& cpCnFold,
 /*
 */
 void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors){
-      // supportVectors[set] = classWeightsPerFold_[bestInd].supportVectors;
-      // supportVectors = &(classWeightsPerFold_[bestInd].supportVectors);
       std::string str = "supportVectors";
       char buffer [30];
       sprintf(buffer,"_fold%d_iteration%d", fold, trainingIter);
       str.append(buffer);
       str.append(".txt");
+
+      PSMDescription* pPSM;
+      double* setRow;
 
       double** set = data.vals;
       const double* Y = data.Y;
@@ -407,9 +408,14 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       	if(!supportVectors[i]){
       	  continue;
       	}
+	pPSM = data.pPSMs[i];
+	setRow = pPSM->features;
       	for(int j = 0; j < n-1; j++){
-      	  featFile << set[i][j] << "\t";
+      	  featFile << setRow[j] << "\t";
       	}
+      	// for(int j = 0; j < n-1; j++){
+      	//   featFile << set[i][j] << "\t";
+      	// }
       	featFile << Y[i] << "\n";
       }
       featFile.close();

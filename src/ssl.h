@@ -13,6 +13,7 @@
 #define _svmlin_H
 #include <vector>
 #include <ctime>
+#include "PSMDescription.h"
 
 using namespace std;
 
@@ -38,6 +39,7 @@ class AlgIn {
     double* Y; /* labels */
     double* C; /* cost associated with each example */
     bool* supportVectors;
+    PSMDescription** pPSMs;
     void setCost(double pos, double neg) {
       int ix = 0;
       for (; ix < negatives; ++ix) {
