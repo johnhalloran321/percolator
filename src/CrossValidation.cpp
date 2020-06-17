@@ -391,31 +391,37 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       PSMDescription* pPSM;
       double* setRow;
 
-      double** set = data.vals;
+      // double** set = data.vals;
       const double* Y = data.Y;
       const int n = data.n;
       const int m = data.m;
 
       ofstream featFile;
       featFile.open(str.c_str());
+      // Write header
+      featFile << "PSMId\t\tpeptide\tproteinIds\t";
       for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
-	// featFile << "feature" << i << "\t";
 	featFile << DataSet::getFeatureNames().getFeatureName(i) << "\t";
       }
       featFile << "label\n";
 
+      // Write support vectors
       for(int i = 0; i < m; i++){
       	if(!supportVectors[i]){
       	  continue;
       	}
 	pPSM = data.pPSMs[i];
 	setRow = pPSM->features;
+	// Peptide info
+	std::ostringstream out;
+	pPSM->printProteins(out);
+	featFile << pPSM->getId() <<  "\t";
+	featFile << pPSM->peptide <<  "\t";
+	featFile << out.str() <<  "\t";
+	// PSM feature values
       	for(int j = 0; j < n-1; j++){
       	  featFile << setRow[j] << "\t";
       	}
-      	// for(int j = 0; j < n-1; j++){
-      	//   featFile << set[i][j] << "\t";
-      	// }
       	featFile << Y[i] << "\n";
       }
       featFile.close();
