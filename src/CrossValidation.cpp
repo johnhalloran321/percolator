@@ -14,7 +14,8 @@
  limitations under the License.
 
  *******************************************************************************/
-
+// #include <boost/filesystem.hpp>
+#include <sys/stat.h>
 #include "CrossValidation.h"
 
 // number of folds for cross validation
@@ -173,6 +174,18 @@ void CrossValidation::train(Normalizer* pNorm) {
     }
     cerr << ", initial_fdr=" << initialSelectionFdr_;
     cerr << ", fdr=" << selectionFdr_ << endl;
+  }
+
+  // Create directory for support vector info
+  struct stat info;
+  if (stat("supportVectors", &info) == 0 && S_ISDIR(info.st_mode)) {
+    std::cout << "Directory supportVectors exists, writing psm influencer info there." << endl;
+  } else {
+    if(mkdir("supportVectors", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)){
+      std::cerr << "Could not create directory for support vector information, exitting" << endl;
+      exit(-1);
+    }
+    std::cout << "Created directory supportVectors exists." << endl;
   }
   
   // iterate
