@@ -403,11 +403,12 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       ofstream featFile;
       featFile.open(str.c_str());
       // Write header
-      featFile << "PSMId\tLabel\tpeptide\tproteinIds";
+      // featFile << "PSMId\tLabel\tpeptide\tproteinIds";
+      featFile << "PSMId\tLabel";
       for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
 	featFile << "\t" << DataSet::getFeatureNames().getFeatureName(i);
       }
-      featFile << endl;
+      featFile << "\tpeptide\tproteinIds" << endl;
 
       // Write support vectors
       for(int i = 0; i < m; i++){
@@ -419,15 +420,12 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
 	// Peptide info
 	std::ostringstream out;
 	pPSM->printProteins(out);
-	featFile << pPSM->getId() <<  "\t";
-      	featFile << Y[i] << "\t";
-	featFile << pPSM->peptide <<  "\t";
-	featFile << out.str();
+	featFile << pPSM->getId() <<  "\t" << Y[i];
 	// PSM feature values
-      	for(int j = 0; j < n-1; j++){
-      	  featFile << "\t" << setRow[j];
+      	for(int j = 0; j < FeatureNames::getNumFeatures(); j++){
+	  featFile << "\t" << setRow[j];
       	}
-      	featFile << endl;
+      	featFile << "\t" << pPSM->peptide << out.str() << endl;
       }
       featFile.close();
 }
@@ -458,11 +456,12 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       ofstream featFile;
       featFile.open(str.c_str());
       // Write header
-      featFile << "PSMId\tLabel\tpeptide\tproteinIds";
+      // featFile << "PSMId\tLabel\tpeptide\tproteinIds";
+      featFile << "PSMId\tLabel";
       for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
 	featFile << "\t" << DataSet::getFeatureNames().getFeatureName(i);
       }
-      featFile << endl;
+      featFile << "\tpeptide\tproteinIds" << endl;
 
       // Write support vectors
       for(int i = 0; i < m; i++){
@@ -474,15 +473,12 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
 	// Peptide info
 	std::ostringstream out;
 	pPSM->printProteins(out);
-	featFile << pPSM->getId() <<  "\t";
-      	featFile << Y[i] << "\t";
-	featFile << pPSM->peptide <<  "\t";
-	featFile << out.str();
+	featFile << pPSM->getId() <<  "\t" << Y[i];
 	// PSM feature values
-      	for(int j = 0; j < n-1; j++){
-      	  featFile << "\t" << setRow[j];
+      	for(int j = 0; j < FeatureNames::getNumFeatures(); j++){
+	  featFile << "\t" << setRow[j];
       	}
-      	featFile << endl;
+      	featFile << "\t" << pPSM->peptide << out.str() << endl;
       }
       featFile.close();
 }
