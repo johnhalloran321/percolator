@@ -174,9 +174,6 @@ void CrossValidation::train(Normalizer* pNorm) {
     cerr << ", initial_fdr=" << initialSelectionFdr_;
     cerr << ", fdr=" << selectionFdr_ << endl;
   }
-
-  cout << "Oh hi, support vector output directory is " << psmInfluencerDIR_ << endl;
-  
   // iterate
   int foundPositivesOldOld = 0, foundPositivesOld = 0, foundPositives = 0; 
   for (unsigned int i = 0; i < niter_; i++) {
@@ -381,7 +378,8 @@ void CrossValidation::trainCpCnPair(candidateCposCfrac& cpCnFold,
   delete pWeights;
 }
 
-/*
+/* Write out psm influencer info for current CV bin.  Note that this function is called after the maximal 
+   (cpos, cneg) SVM is identified and receives the corresponding sotred vector of bools, i.e., when nestedXvalBins_ <= 1
 */
 void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors){
 #ifndef WIN32
@@ -390,7 +388,7 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       std::string str = psmInfluencerDIR_ + "\supportVectors";
 #endif
       char buffer [30];
-      sprintf(buffer,"_fold%d_iteration%d", fold, trainingIter);
+      sprintf(buffer,"_iteration%d_fold%d", trainingIter, fold);
       str.append(buffer);
       str.append(".txt");
 
@@ -405,11 +403,11 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       ofstream featFile;
       featFile.open(str.c_str());
       // Write header
-      featFile << "PSMId\t\tpeptide\tproteinIds\t";
+      featFile << "PSMId\tLabel\tpeptide\tproteinIds";
       for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
-	featFile << DataSet::getFeatureNames().getFeatureName(i) << "\t";
+	featFile << "\t" << DataSet::getFeatureNames().getFeatureName(i);
       }
-      featFile << "label\n";
+      featFile << endl;
 
       // Write support vectors
       for(int i = 0; i < m; i++){
@@ -422,16 +420,71 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
 	std::ostringstream out;
 	pPSM->printProteins(out);
 	featFile << pPSM->getId() <<  "\t";
+      	featFile << Y[i] << "\t";
 	featFile << pPSM->peptide <<  "\t";
-	featFile << out.str() <<  "\t";
+	featFile << out.str();
 	// PSM feature values
       	for(int j = 0; j < n-1; j++){
-      	  featFile << setRow[j] << "\t";
+      	  featFile << "\t" << setRow[j];
       	}
-      	featFile << Y[i] << "\n";
+      	featFile << endl;
       }
       featFile.close();
+}
 
+/* Write out psm influencer info for current set of nested folds.  Note that this function uses the 
+   bool variables directly from ssl.cpp, since L2_SVM_MFN is called just prior to this function, i.e., 
+   when nestedXvalBins_ > 1
+*/
+void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int trainingIter){
+#ifndef WIN32
+      std::string str = psmInfluencerDIR_ + "/supportVectors";
+#else
+      std::string str = psmInfluencerDIR_ + "\supportVectors";
+#endif
+      char buffer [30];
+      sprintf(buffer,"_iteration%d_fold%d", trainingIter, fold);
+      str.append(buffer);
+      str.append(".txt");
+
+      PSMDescription* pPSM;
+      double* setRow;
+
+      const bool* supportVectors = data.supportVectors;
+      const double* Y = data.Y;
+      const int n = data.n;
+      const int m = data.m;
+
+      ofstream featFile;
+      featFile.open(str.c_str());
+      // Write header
+      featFile << "PSMId\tLabel\tpeptide\tproteinIds";
+      for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
+	featFile << "\t" << DataSet::getFeatureNames().getFeatureName(i);
+      }
+      featFile << endl;
+
+      // Write support vectors
+      for(int i = 0; i < m; i++){
+      	if(!supportVectors[i]){
+      	  continue;
+      	}
+	pPSM = data.pPSMs[i];
+	setRow = pPSM->features;
+	// Peptide info
+	std::ostringstream out;
+	pPSM->printProteins(out);
+	featFile << pPSM->getId() <<  "\t";
+      	featFile << Y[i] << "\t";
+	featFile << pPSM->peptide <<  "\t";
+	featFile << out.str();
+	// PSM feature values
+      	for(int j = 0; j < n-1; j++){
+      	  featFile << "\t" << setRow[j];
+      	}
+      	featFile << endl;
+      }
+      featFile.close();
 }
 
 /** 
@@ -498,7 +551,7 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
       }
     }
 
-    // Write out support vectors for optimal (cpos,cneg) SVMs per set
+    // Write out psm influencer info for optimal (cpos,cneg) SVMs per set
     if (nestedXvalBins_ <= 1) {
       AlgIn* svmInput = svmInputs_[set];
       vector<bool> *svs = &classWeightsPerFold_[bestInd].supportVectors;
@@ -532,7 +585,7 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
       }
       // Call SVM algorithm (see ssl.cpp)
       L2_SVM_MFN(*svmInput, pOptions, pWeights, Outputs, bestCposes[set], bestCposes[set] * bestCfracs[set]);
-    
+      writeSupportVectors(*svmInput, set, trainingIter);
       for (int i = FeatureNames::getNumFeatures() + 1; i--;) {
         w_[set][i] = pWeights->vec[i];
       }
