@@ -116,6 +116,7 @@ class CrossValidation {
 
   void writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors);
   void writeSupportVectors(const AlgIn& data, int fold, int trainingIter);
+  void writeSvmWeights(std::vector< std::vector<double> > weightMatrix, int trainingIter);
   int mergeCpCnPairs(double selectionFdr,
                      options * pOptions, std::vector< std::vector<Scores> >& nestedTestScoresVec,
                      const vector<double>& cpos_vec, const vector<double>& cfrac_vec, 

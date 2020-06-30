@@ -483,6 +483,39 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       featFile.close();
 }
 
+/* Within a Percolator iteration, write out top (cpos, cneg) SVM learned weights for each fold 
+*/
+void CrossValidation::writeSvmWeights(std::vector< std::vector<double> > weightMatrix, int trainingIter){
+#ifndef WIN32
+      std::string str = psmInfluencerDIR_ + "/svmWeights";
+#else
+      std::string str = psmInfluencerDIR_ + "\svmWeights";
+#endif
+      char buffer [30];
+      sprintf(buffer,"_iteration%d", trainingIter);
+      str.append(buffer);
+      str.append(".txt");
+
+      ofstream weightFile;
+      weightFile.open(str.c_str());
+      // Write header
+      weightFile << "CVFold";
+      for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
+	weightFile << "\t" << DataSet::getFeatureNames().getFeatureName(i);
+      }
+      weightFile << "\tbias" << endl;
+      // Write weights per CV fold
+      for (int set = 0; set < numFolds_; ++set) {
+	weightFile << set;
+	for(int i = 0; i < FeatureNames::getNumFeatures() + 1; i++){
+	  weightFile << "\t" << std::setprecision(10) << weightMatrix[set][i];
+	}
+	weightFile << endl;
+      }
+
+      weightFile.close();
+}
+
 /** 
  * Validate and merge weights learned per cpos,cneg pairs per nested CV fold per CV fold
  * @param pWeights results vector from the SVM algorithm
@@ -591,6 +624,8 @@ int CrossValidation::mergeCpCnPairs(double selectionFdr,
       delete Outputs;
     }
   }
+
+  writeSvmWeights(w_, trainingIter);
 
   double bestTruePos = 0;
   for (set = 0; set < numFolds_; ++set) {
