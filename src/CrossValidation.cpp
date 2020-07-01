@@ -100,7 +100,9 @@ int CrossValidation::preIterationSetup(Scores& fullset, SanityCheck* pCheck,
   }
   int numPositive = pCheck->getInitDirection(testScores_, trainScores_, pNorm, w_, 
                                          testFdr_, initialSelectionFdr_);
-  
+  // Write out test sets
+  writeTestSets();
+
   // Form cpos, cneg pairs per nested CV fold
   candidateCposCfrac cpCnFold;
   for (int set = 0; set < numFolds_; ++set) {
@@ -481,6 +483,63 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
       	featFile << "\t" << pPSM->peptide << out.str() << endl;
       }
       featFile.close();
+}
+
+/* Write out test sets
+*/
+void CrossValidation::writeTestSets(){
+// #ifndef WIN32
+//       std::string str = psmInfluencerDIR_ + "/testSet";
+// #else
+//       std::string str = psmInfluencerDIR_ + "\testSet";
+// #endif
+      char buffer [30];
+      PSMDescription* pPSM;
+      double* setRow;
+      double y;
+
+      for (int set = 0; set < numFolds_; ++set) {
+#ifndef WIN32
+	std::string str = psmInfluencerDIR_ + "/testSet";
+#else
+	std::string str = psmInfluencerDIR_ + "\testSet";
+#endif
+	sprintf(buffer,"_fold%d", set);
+	str.append(buffer);
+	str.append(".txt");
+
+	ofstream featFile;
+	featFile.open(str.c_str());
+	// Write header
+	// featFile << "PSMId\tLabel\tpeptide\tproteinIds";
+	featFile << "PSMId\tLabel";
+	for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
+	  featFile << "\t" << DataSet::getFeatureNames().getFeatureName(i);
+	}
+	featFile << "\tpeptide\tproteinIds" << endl;
+
+	// Write test features
+	std::vector<ScoreHolder>::const_iterator scoreIt = testScores_[set].begin();
+	for ( ; scoreIt != testScores_[set].end(); ++scoreIt) {
+	  if (scoreIt->isTarget()) {
+	    y = 1;
+	  }else{
+	    y=-1;
+	  }
+	  pPSM = scoreIt->pPSM;
+	  setRow = scoreIt->pPSM->features;
+	  // Peptide info
+	  std::ostringstream out;
+	  pPSM->printProteins(out);
+	  featFile << pPSM->getId() <<  "\t" << y;
+	  // PSM feature values
+	  for(int j = 0; j < FeatureNames::getNumFeatures(); j++){
+	    featFile << "\t" << setRow[j];
+	  }
+	  featFile << "\t" << pPSM->peptide << out.str() << endl;
+	}
+	featFile.close();
+      }
 }
 
 /* Within a Percolator iteration, write out top (cpos, cneg) SVM learned weights for each fold 

@@ -114,6 +114,7 @@ class CrossValidation {
   void trainCpCnPair(candidateCposCfrac& cpCnFold,
                      options * pOptions, AlgIn* svmInput);
 
+  void writeTestSets();
   void writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors);
   void writeSupportVectors(const AlgIn& data, int fold, int trainingIter);
   void writeSvmWeights(std::vector< std::vector<double> > weightMatrix, int trainingIter);
