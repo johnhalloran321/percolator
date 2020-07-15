@@ -543,6 +543,11 @@ void CrossValidation::writeTestSets(){
 */
 void CrossValidation::writeNormalizers(Normalizer* pnorm){
   double* denoms = pnorm->getDiv();
+  double* mus = pnorm->getSub();
+  size_t offset = 0;
+  if (DataSet::getCalcDoc()) {
+    offset = FeatureNames::getNumFeatures() -DescriptionOfCorrect::numDOCFeatures();
+  }
 #ifndef WIN32
 	std::string str = psmInfluencerDIR_ + "/normalizers.txt";
 #else
@@ -550,12 +555,13 @@ void CrossValidation::writeNormalizers(Normalizer* pnorm){
 #endif
 	ofstream featFile;
 	featFile.open(str.c_str());
-	featFile << denoms[0];
-	for(int i = 1; i < FeatureNames::getNumFeatures(); i++){
+	featFile << "mu\tdenom" << endl;
+	for(int i = 0; i < FeatureNames::getNumFeatures(); i++){
+	  featFile << fixed << setprecision(8) << mus[offset + i];
 	  featFile << "\t";
-	  featFile << fixed << setprecision(8) << denoms[i];
+	  featFile << fixed << setprecision(8) << denoms[offset + i];
+	  featFile << endl;
 	}
-	featFile << endl;
 	featFile.close();
 }
 
