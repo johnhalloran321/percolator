@@ -102,6 +102,8 @@ int CrossValidation::preIterationSetup(Scores& fullset, SanityCheck* pCheck,
                                          testFdr_, initialSelectionFdr_);
   // Write out test sets
   writeTestSets();
+  // Write out normalizers
+  writeNormalizers(pNorm);
 
   // Form cpos, cneg pairs per nested CV fold
   candidateCposCfrac cpCnFold;
@@ -488,11 +490,6 @@ void CrossValidation::writeSupportVectors(const AlgIn& data, int fold, int train
 /* Write out test sets
 */
 void CrossValidation::writeTestSets(){
-// #ifndef WIN32
-//       std::string str = psmInfluencerDIR_ + "/testSet";
-// #else
-//       std::string str = psmInfluencerDIR_ + "\testSet";
-// #endif
       char buffer [30];
       PSMDescription* pPSM;
       double* setRow;
@@ -540,6 +537,26 @@ void CrossValidation::writeTestSets(){
 	}
 	featFile.close();
       }
+}
+
+/* Write normalizer weights
+*/
+void CrossValidation::writeNormalizers(Normalizer* pnorm){
+  double* denoms = pnorm->getDiv();
+#ifndef WIN32
+	std::string str = psmInfluencerDIR_ + "/normalizers.txt";
+#else
+	std::string str = psmInfluencerDIR_ + "\normalizers";
+#endif
+	ofstream featFile;
+	featFile.open(str.c_str());
+	featFile << denoms[0];
+	for(int i = 1; i < FeatureNames::getNumFeatures(); i++){
+	  featFile << "\t";
+	  featFile << fixed << setprecision(8) << denoms[i];
+	}
+	featFile << endl;
+	featFile.close();
 }
 
 /* Within a Percolator iteration, write out top (cpos, cneg) SVM learned weights for each fold 
