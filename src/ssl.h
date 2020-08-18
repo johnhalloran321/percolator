@@ -35,6 +35,7 @@ class AlgIn {
     int n; /* number of features */
     int positives;
     int negatives;
+    int allPositives;
     double** vals;
     double* Y; /* labels */
     double* C; /* cost associated with each example */

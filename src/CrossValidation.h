@@ -115,7 +115,7 @@ class CrossValidation {
                      options * pOptions, AlgIn* svmInput);
 
   void writeTargetDecoyTrainSizesHeader();
-  void writeTargetDecoyTrainSizes(int fold, int positives, int negatives);
+  void writeTargetDecoyTrainSizes(int fold, int positives, int negatives, int allPositives);
   void writeTestSets();
   void writeNormalizers(Normalizer* pnorm);
   void writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors);

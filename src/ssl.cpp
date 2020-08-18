@@ -51,6 +51,7 @@ AlgIn::AlgIn(const int size, const int numFeat) {
   n = numFeat;
   positives = 0;
   negatives = 0;
+  allPositives = 0;
 }
 AlgIn::~AlgIn() {
   delete[] vals;

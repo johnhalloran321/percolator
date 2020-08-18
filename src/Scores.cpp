@@ -529,8 +529,10 @@ void Scores::generatePositiveTrainingSet(AlgIn& data, const double fdr,
   }
   
   std::vector<ScoreHolder>::const_iterator scoreIt = scores_.begin();
+  data.allPositives = 0;
   for ( ; scoreIt != lastUniqueIt; ++scoreIt) {
     if (scoreIt->isTarget()) {
+      data.allPositives++;
       if (scoreIt->q <= fdr) {
         data.vals[ix2] = scoreIt->pPSM->features;
         data.Y[ix2] = 1;
