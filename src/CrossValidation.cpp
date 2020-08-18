@@ -316,7 +316,7 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
          nestedTrainScores[nestedFold].generateNegativeTrainingSet(*svmInput, 1.0);
          nestedTrainScores[nestedFold].generatePositiveTrainingSet(*svmInput, selectionFdr, 1.0, trainBestPositive_);
 	 // Write training set sizes
-	 writeTargetDecoyTrainSizes(set * nestedXvalBins_ + nestedFold, svmInput->positives, svmInput->negatives, svmInput->allPositives);
+	 writeTargetDecoyTrainSizes(trainingIter, set * nestedXvalBins_ + nestedFold, svmInput->positives, svmInput->negatives, svmInput->allPositives);
 
          svmInputsVec.push_back(svmInput);
        }
@@ -502,12 +502,12 @@ void CrossValidation::writeTargetDecoyTrainSizesHeader(){
 #endif
   ofstream featFile;
   featFile.open(str.c_str());
-  featFile << "Fold\tNumTargets\tNumDecoys\tAllTarget" << endl;
+  featFile << "Iterations\tFold\tNumTargets\tNumDecoys\tAllTargets" << endl;
   featFile.close();
 }
 
 // Write training set sizes
-void CrossValidation::writeTargetDecoyTrainSizes(int fold, int positives, int negatives, int allPositives){
+ void CrossValidation::writeTargetDecoyTrainSizes(int iteration, int fold, int positives, int negatives, int allPositives){
 #ifndef WIN32
   std::string str = psmInfluencerDIR_ + "/trainSetSizes.txt";
 #else
@@ -515,7 +515,7 @@ void CrossValidation::writeTargetDecoyTrainSizes(int fold, int positives, int ne
 #endif
   ofstream featFile;
   featFile.open(str.c_str(), ofstream::app);
-  featFile << fold << "\t" << positives << "\t" << negatives << "\t" << allPositives << endl;
+  featFile << iteration << "\t" << fold << "\t" << positives << "\t" << negatives << "\t" << allPositives << endl;
   featFile.close();
 }
 
