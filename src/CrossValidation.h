@@ -17,6 +17,8 @@
 #ifndef CROSSVALIDATION_H_
 #define CROSSVALIDATION_H_
 
+// #include <unordered_set>
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -29,6 +31,7 @@
 #include "DataSet.h"
 #include "FeatureMemoryPool.h"
 #include "ssl.h"
+#include <boost/unordered/unordered_set.hpp>
 
 struct candidateCposCfrac {
   double cpos;
@@ -105,6 +108,8 @@ class CrossValidation {
   std::string psmInfluencerDIR_;
   
   const static double requiredIncreaseOver2Iterations_;
+
+  boost::unordered_set <string> targetPsmIds_;
   
   const static unsigned int numFolds_;
   const static unsigned int numAlgInObjects_;
@@ -116,6 +121,7 @@ class CrossValidation {
 
   void writeTargetDecoyTrainSizesHeader();
   void writeTargetDecoyTrainSizes(int iteration, int fold, int positives, int negatives, int allPositives);
+  void writeTrainingTargetPsmIds();
   void writeTestSets();
   void writeNormalizers(Normalizer* pnorm);
   void writeSupportVectors(const AlgIn& data, int fold, int trainingIter, vector<bool> &supportVectors);

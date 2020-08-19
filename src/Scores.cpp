@@ -14,7 +14,6 @@
  limitations under the License.
 
  *******************************************************************************/
-
 #include <cassert>
 #include <iostream>
 #include <iomanip>
@@ -518,7 +517,7 @@ void Scores::generateNegativeTrainingSet(AlgIn& data, const double cneg) {
 }
 
 void Scores::generatePositiveTrainingSet(AlgIn& data, const double fdr,
-    const double cpos, const bool trainBestPositive) {
+					 const double cpos, const bool trainBestPositive) {
   unsigned int ix2 = data.negatives, p = 0;
   
   std::vector<ScoreHolder>::iterator lastUniqueIt = scores_.end();
@@ -538,6 +537,37 @@ void Scores::generatePositiveTrainingSet(AlgIn& data, const double fdr,
         data.Y[ix2] = 1;
 	data.pPSMs[ix2] = scoreIt->pPSM;
         data.C[ix2++] = cpos;
+        ++p;
+      }
+    }
+  }
+  data.positives = p;
+  data.m = ix2;
+}
+
+void Scores::generatePositiveTrainingSet(AlgIn& data, const double fdr,
+					 const double cpos, const bool trainBestPositive, 
+					 boost::unordered_set <string>& targetPsmIds) {
+  unsigned int ix2 = data.negatives, p = 0;
+  
+  std::vector<ScoreHolder>::iterator lastUniqueIt = scores_.end();
+  if (trainBestPositive) {
+    std::sort(scores_.begin(), scores_.end(), OrderScanLabel());
+    lastUniqueIt = std::unique(scores_.begin(), scores_.end(), UniqueScanLabel());
+    std::sort(scores_.begin(), lastUniqueIt, greater<ScoreHolder> ());
+  }
+  
+  std::vector<ScoreHolder>::const_iterator scoreIt = scores_.begin();
+  data.allPositives = 0;
+  for ( ; scoreIt != lastUniqueIt; ++scoreIt) {
+    if (scoreIt->isTarget()) {
+      data.allPositives++;
+      if (scoreIt->q <= fdr) {
+        data.vals[ix2] = scoreIt->pPSM->features;
+        data.Y[ix2] = 1;
+	data.pPSMs[ix2] = scoreIt->pPSM;
+        data.C[ix2++] = cpos;
+	targetPsmIds.insert(scoreIt->pPSM->getId());
         ++p;
       }
     }

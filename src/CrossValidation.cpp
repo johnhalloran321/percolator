@@ -228,6 +228,9 @@ void CrossValidation::train(Normalizer* pNorm) {
     foundPositivesOldOld = foundPositivesOld;    
     foundPositivesOld = foundPositives;
   }
+  // Write out all training target PSM ids
+  writeTrainingTargetPsmIds();
+
   if (VERB == 2) {
     printAllWeightsColumns(cerr);
   }
@@ -261,7 +264,8 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
   pOptions->cgitermax = CGITERMAX;
   pOptions->mfnitermax = MFNITERMAX;
   int estTruePos = 0;
-  
+
+  boost::unordered_set <string>* targetPsmIds = &targetPsmIds_;
   // for determining an appropriate positive training set, the decoys+1 in the 
   // FDR estimates is too restrictive for small datasets
   bool skipDecoysPlusOne = true; 
@@ -314,7 +318,7 @@ int CrossValidation::doStep(bool updateDOC, Normalizer* pNorm, double selectionF
                 << svmInput->negatives << " negatives" << std::endl;
          }
          nestedTrainScores[nestedFold].generateNegativeTrainingSet(*svmInput, 1.0);
-         nestedTrainScores[nestedFold].generatePositiveTrainingSet(*svmInput, selectionFdr, 1.0, trainBestPositive_);
+         nestedTrainScores[nestedFold].generatePositiveTrainingSet(*svmInput, selectionFdr, 1.0, trainBestPositive_, *targetPsmIds);
 	 // Write training set sizes
 	 writeTargetDecoyTrainSizes(trainingIter, set * nestedXvalBins_ + nestedFold, svmInput->positives, svmInput->negatives, svmInput->allPositives);
 
@@ -503,6 +507,21 @@ void CrossValidation::writeTargetDecoyTrainSizesHeader(){
   ofstream featFile;
   featFile.open(str.c_str());
   featFile << "Iterations\tFold\tNumTargets\tNumDecoys\tAllTargets" << endl;
+  featFile.close();
+}
+
+// Write unique set of target psm ids used for training across all iterations and cv folds
+void CrossValidation::writeTrainingTargetPsmIds(){
+#ifndef WIN32
+  std::string str = psmInfluencerDIR_ + "/targetPsmIds.txt";
+#else
+  std::string str = psmInfluencerDIR_ + "\targetPsmIds.txt";
+#endif
+  ofstream featFile;
+  featFile.open(str.c_str());
+  for ( boost::unordered_set<string>::iterator it = targetPsmIds_.begin(); it != targetPsmIds_.end(); ++it ){
+    featFile << *it << endl;
+  }
   featFile.close();
 }
 

@@ -21,6 +21,7 @@
   #include <stdint.h>
 #endif
 
+// #include <unordered_set>
 #include <cstdlib>
 #include <cfloat>
 #include <algorithm>
@@ -36,6 +37,7 @@
 #include "FeatureMemoryPool.h"
 
 #include <boost/unordered/unordered_map.hpp>
+#include <boost/unordered/unordered_set.hpp>
 
 class Scores;
 
@@ -197,6 +199,9 @@ class Scores {
   
   void generatePositiveTrainingSet(AlgIn& data, const double fdr,
       const double cpos, const bool trainBestPositive);
+  void generatePositiveTrainingSet(AlgIn& data, const double fdr,
+				   const double cpos, const bool trainBestPositive, 
+				   boost::unordered_set <string>& targetPsmIds);
   void generateNegativeTrainingSet(AlgIn& data, const double cneg);
   
   void recalculateSizes();
