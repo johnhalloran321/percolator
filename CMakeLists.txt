@@ -29,7 +29,7 @@ MESSAGE( STATUS )
 MESSAGE( STATUS
 "-------------------------------------------------------------------------------"
 )
-MESSAGE( STATUS "Building PERCOLATOR:" )
+MESSAGE( STATUS "Building PRISM PERCOLATOR:" )
 MESSAGE( STATUS "change a configuration variable with: cmake -D<Variable>=<Value>" )
 MESSAGE( STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}" )
 MESSAGE( STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}" )
@@ -104,9 +104,9 @@ install(FILES src/xml/percolator_out.xsd DESTINATION ${XML_REL_PATH}/${POUT_SCHE
 if(NOT XML_SUPPORT)
   set(NICKNAME_SUFFIX "-noxml")
 endif()
-set(PACKAGE_NICKNAME "percolator${NICKNAME_SUFFIX}")
+set(PACKAGE_NICKNAME "prismPercolator${NICKNAME_SUFFIX}")
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Percolator and qvality, two post processors for shotgun proteomics data.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "PRISM's Percolator, interpretable SVM post processing for shotgun proteomics data.")
 include("CPack.txt")
 
 set(CPACK_RPM_PACKAGE_DEPENDS "${CPACK_RPM_PACKAGE_DEPENDS} libc6, libgcc1")
